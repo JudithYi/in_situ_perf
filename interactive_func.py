@@ -39,22 +39,26 @@ def _plot_sync_async(f_sim, f_insitu, f_comm, fre, nodes):
     color=['#AC92EB', '#4FC1E8', '#A0D568', '#ED5564', '#FFCE54']
     color_2=['#C7395F','#E8BA40']
     plt.rcParams["font.family"] = "Times New Roman"
-    fig, axs = plt.subplots(ncols=2, nrows=1,  figsize=(30*0.33,12*0.33))
+    fig, axs = plt.subplots(ncols=2, nrows=1,  figsize=(30*0.5,12*0.5))
     t_sync = t_sim + fre*t_insitu
     p_size = p.shape
     t_async = np.zeros(p_size[0],dtype=float)
-    config_async = np.zeros(p_size[0])
+    config_async = np.zeros(p_size[0],dtype=int)
     for i in range(p_size[0]):
         t_async[i], config_async[i] = async_min(f_sim, f_insitu, f_comm, fre, p[i])
-    axs[0].plot(p, t_sync, linewidth=2, color=color[1])
-    axs[0].scatter(p, t_async, marker="X", s = 100, color=color[3])
-    print("Async configurations: ")
-    print(config_async)
+    lines=[]
+    line,=axs[0].plot(p, t_sync, linewidth=2, color=color[1])
+    lines.append(line)
+    line=axs[0].scatter(p, t_async, marker="X", s = 100, color=color[3])
+    for i, txt in enumerate(config_async):
+        axs[0].annotate(txt, (p[i], t_async[i]*1.1))
+    lines.append(line)
     axs[0].grid(True)
     axs[0].set_ylabel("Execution time (seconds)", fontsize=fs)
     axs[0].set_xlabel("Number of cores", fontsize=fs)
     axs[0].set_xticks(p[::2])
     axs[0].set_xticklabels(p[::2], fontsize = fs)
+    axs[0].legend(lines,["Sync", "Best async"], fontsize=fs)
     ub = np.max(t_sync)
     if ub < np.max(t_async):
         ub = np.max(t_async)
@@ -86,6 +90,7 @@ def _plot_sync_async(f_sim, f_insitu, f_comm, fre, nodes):
     axs[1].set_yticks(np.arange(0, 1.1, 0.2, dtype=float))
     axs[1].set_xticks(p_e[::2])
     axs[1].set_xticklabels(p_e[::2], fontsize = fs)
+    axs[1].legend(lines,["Nek5000", "Image generation"], fontsize=fs)
     y_ticks = []
     for i in range(6):
         y_ticks.append(str(float("{:.2f}".format(0.2*i))))
